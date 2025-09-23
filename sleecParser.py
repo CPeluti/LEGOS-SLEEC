@@ -85,8 +85,9 @@ def parse_constants(constant, constants):
     if constant.name not in constants:
         constants[constant.name] = cur_val
     return cur_val
-def parse_fluent(fluent, fluents):
-    return
+def parse_fluent(fluent, type_dict):
+    # DressingStarted = create_action("DressingStarted", [("time", "time")], type_dict)
+    return create_action(fluent.name, [("time", "time")], type_dict)
 
 def parse_definitions(defs):
     ACTION_Mapping = {}
@@ -106,7 +107,7 @@ def parse_definitions(defs):
         if isXinstance(d, "Constant"):
             parse_constants(d, constants)
         if isXinstance(d, "Fluent"):
-            parse_fluent(d)
+            ACTION_Mapping[d.name] = parse_fluent(d, type_dict)
 
     # Now, we should create the measure class
     ACTION_Mapping["Measure"] = create_action("Measure", _measures, type_dict)
