@@ -85,7 +85,8 @@ def parse_constants(constant, constants):
     if constant.name not in constants:
         constants[constant.name] = cur_val
     return cur_val
-
+def parse_fluent(fluent, fluents):
+    return
 
 def parse_definitions(defs):
     ACTION_Mapping = {}
@@ -104,6 +105,8 @@ def parse_definitions(defs):
             _measures.append(parse_measure_def(d, type_dict))
         if isXinstance(d, "Constant"):
             parse_constants(d, constants)
+        if isXinstance(d, "Fluent"):
+            parse_fluent(d)
 
     # Now, we should create the measure class
     ACTION_Mapping["Measure"] = create_action("Measure", _measures, type_dict)

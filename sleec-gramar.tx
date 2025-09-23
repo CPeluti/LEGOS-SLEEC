@@ -8,11 +8,15 @@ Defblock:
 ;
 
 Definition:
-    Event | Measure | Constant
+    Event | Measure | Constant | Fluent
 ;
 
 Event:
     "event" name=ID
+;
+
+Fluent:
+    "fluent" name=ID "<" "{" start=ID "}" "," "{" ends+=ID[','] "}" ">"
 ;
 
 Measure:
