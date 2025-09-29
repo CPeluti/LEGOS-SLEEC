@@ -728,7 +728,6 @@ def check_conflict(model, rules, relations, Action_Mapping, Actions, Fluents, mo
     relations_constraint = get_relational_constraints(relations)
     multi_output = []
     conflicting_set_for_fluents = set()
-    conflicting_fluents = {}
 
     for i in range(len(rules)):
 
@@ -877,7 +876,7 @@ def check_conflict(model, rules, relations, Action_Mapping, Actions, Fluents, mo
         clear_relational_constraints(relations)
         [r.clear() for r in first_inv]
         print("*" * 100)
-    output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents, conflicting_fluents)
+    output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents)
     output += "*" * 100 + '\n'
     
     if multi_entry:

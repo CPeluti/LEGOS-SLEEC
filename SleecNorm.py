@@ -5,9 +5,9 @@ from proof_reader import check_and_minimize
 from sleecOp import EventRelation
 from sleecParser import isXinstance, read_model_file, mm, parse_definitions, constants, scalar_type, reset_rules, \
     parse_rules, parse_concerns, get_high_light, find_relative_pos, registered_type, scalar_mask, parse_relations, \
-    get_relational_constraints, clear_relational_constraints
+    get_relational_constraints, clear_relational_constraints, parse_fluents
 from pysmt.shortcuts import *
-
+from fluents import *
 from trace_ult import model_based_inst
 from type_constructor import create_action, create_type, union
 
@@ -773,7 +773,7 @@ def parse_sleec_norm(model_file, read_file=True):
     model = mm.model_from_str(model_str)
     Action_Mapping = parse_definitions(model.definitions)
     Actions = list(Action_Mapping.values())
-
+    Fluents = parse_fluents(model.definitions)
     rules = parse_rules_norm(model.ruleBlock)
     og_rules = parse_rules(model.ruleBlock, Action_Mapping)
     if model.concernBlock:
@@ -786,7 +786,7 @@ def parse_sleec_norm(model_file, read_file=True):
     else:
         relations = []
 
-    return model, rules, Action_Mapping, Actions, og_rules, concerns, relations
+    return model, rules, Action_Mapping, Actions, og_rules, concerns, relations, Fluents
 
 
 def norm_parse_element(node, cond=None):
@@ -1151,12 +1151,12 @@ def process_conflict(relations):
 
 
 def check_situational_conflict(model_str, multi_entry=False):
+    conflicting_set_for_fluents = set()
     output = ""
     result = False
     adj_hl = []
-    conflicting_set_for_fluents = set()
     multi_output = []
-    model, rules, Action_Mapping, Actions, og_rules, concerns, relations = parse_sleec_norm(model_str, read_file=False)
+    model, rules, Action_Mapping, Actions, og_rules, concerns, relations, Fluents = parse_sleec_norm(model_str, read_file=False)
     for rule in rules:
         print(rule)
 
@@ -1267,7 +1267,9 @@ def check_situational_conflict(model_str, multi_entry=False):
                     output += ("-" * 100 + '\n')
                     output += "Because of the following SLEEC rule:\n"
                     output += ("-" * 100 + '\n')
+                    conflicting_set_for_fluents.add((target.name, target.response.occ.event.event.name))
                     for r in reasons:
+                        conflicting_set_for_fluents.add((r.name, r.response.occ.event.event.name))
                         start, end = r._tx_position, r._tx_position_end
                         new_start = len(output)
                         local_index[(start, end)] = new_start
@@ -1288,6 +1290,8 @@ def check_situational_conflict(model_str, multi_entry=False):
                 except:
                     rule_model = model.ruleBlock.rules[rule_number]
                     start, end = rule_model._tx_position, rule_model._tx_position_end
+                    conflicting_set_for_fluents.add((rule_model.name, rule_model.response.occ.event.event.name))
+                    conflicting_set_for_fluents.add((rule_model.name, rule_model.trigger.event.name))
                     output += "For rule:\n"
                     output += "{}\n".format(model_str[start: end])
                     output += ("-" * 100 + '\n')
@@ -1300,13 +1304,14 @@ def check_situational_conflict(model_str, multi_entry=False):
                 # output += "{}\n".format(model_str[start: end])
                 # output += ("-" * 100 + '\n')
                 print("worth checking: {}\n".format(model_str[start: end]))
-
         clear_all(Actions)
         reset_rules(og_rules)
         measure_inv.clear()
         derivation_rule.reset()
         clear_relational_constraints(relations)
 
+    output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents)
+    output += "*" * 100 + '\n'
     derivation_rule.reset()
     clear_relational_constraints(relations)
     reset_all()
