@@ -7,6 +7,7 @@ from type_constructor import create_type, create_action, union
 from sleecOp import WhenRule, happen_within, otherwise, unless, complie_measure, Concern, EventRelation, \
     MeasureRelation, Causation, Effect, UntilEMRelation, TimedEMRelation
 from logic_operator import *
+from fluents import * 
 import derivation_rule
 from proof_reader import Fact
 
@@ -85,9 +86,13 @@ def parse_constants(constant, constants):
     if constant.name not in constants:
         constants[constant.name] = cur_val
     return cur_val
-def parse_fluent(fluent, type_dict):
-    # DressingStarted = create_action("DressingStarted", [("time", "time")], type_dict)
-    return create_action(fluent.name, [("time", "time")], type_dict)
+
+def parse_fluents(defs):
+    Fluents = {}
+    for d in defs:
+        if isXinstance(d, "Fluent"):
+            Fluents[d.name] = (d.start, d.ends)
+    return Fluents
 
 def parse_definitions(defs):
     ACTION_Mapping = {}
@@ -106,8 +111,6 @@ def parse_definitions(defs):
             _measures.append(parse_measure_def(d, type_dict))
         if isXinstance(d, "Constant"):
             parse_constants(d, constants)
-        if isXinstance(d, "Fluent"):
-            ACTION_Mapping[d.name] = parse_fluent(d, type_dict)
 
     # Now, we should create the measure class
     ACTION_Mapping["Measure"] = create_action("Measure", _measures, type_dict)
@@ -703,7 +706,7 @@ def check_concerns(model, rules, concerns, relations, Action_Mapping, Actions, m
     return concern_raised, output, adj_hl
 
 
-def check_conflict(model, rules, relations, Action_Mapping, Actions, model_str="", check_proof=False, to_print=True,
+def check_conflict(model, rules, relations, Action_Mapping, Actions, Fluents, model_str="", check_proof=False, to_print=True,
                    multi_entry=False):
 
     Measure = Action_Mapping["Measure"]
@@ -724,6 +727,8 @@ def check_conflict(model, rules, relations, Action_Mapping, Actions, model_str="
     conflicting_set = set()
     relations_constraint = get_relational_constraints(relations)
     multi_output = []
+    conflicting_set_for_fluents = set()
+    conflicting_fluents = {}
 
     for i in range(len(rules)):
 
@@ -844,7 +849,9 @@ def check_conflict(model, rules, relations, Action_Mapping, Actions, model_str="
             output += ("-" * 100 + '\n')
             output += "Because of the following SLEEC rule:\n"
             output += ("-" * 100 + '\n')
+            conflicting_set_for_fluents.add((target.name, target.response.occ.event.event.name))
             for r in reasons:
+                conflicting_set_for_fluents.add((r.name, r.response.occ.event.event.name))
                 start, end = r._tx_position, r._tx_position_end
                 new_start = len(output)
                 local_index[(start, end)] = new_start
@@ -870,7 +877,9 @@ def check_conflict(model, rules, relations, Action_Mapping, Actions, model_str="
         clear_relational_constraints(relations)
         [r.clear() for r in first_inv]
         print("*" * 100)
-        output += "*" * 100 + '\n'
+    output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents, conflicting_fluents)
+    output += "*" * 100 + '\n'
+    
     if multi_entry:
         return multi_output
     else:
@@ -1284,6 +1293,7 @@ def parse_sleec(model_file, read_file=True):
     # Parse the model using the metamodel
     model = mm.model_from_str(model_str)
     Action_Mapping = parse_definitions(model.definitions)
+    Fluents = parse_fluents(model.definitions)
     Actions = list(Action_Mapping.values())
     rules = parse_rules(model.ruleBlock, Action_Mapping)
     if model.concernBlock:
@@ -1301,7 +1311,7 @@ def parse_sleec(model_file, read_file=True):
     else:
         relations = []
 
-    return model, rules, concerns, purposes, relations, Action_Mapping, Actions
+    return model, rules, concerns, purposes, relations, Action_Mapping, Actions, Fluents
 
 
 #
@@ -1321,8 +1331,8 @@ def check_input_red(model_str, multi_entry=False):
 
 
 def check_input_conflict(model_str, multi_entry=False):
-    model, rules, concerns, purposes, relations, Action_Mapping, Actions = parse_sleec(model_str, read_file=False)
-    res = check_conflict(model, rules, relations, Action_Mapping, Actions, check_proof=True, model_str=model_str,
+    model, rules, concerns, purposes, relations, Action_Mapping, Actions, Fluents = parse_sleec(model_str, read_file=False)
+    res = check_conflict(model, rules, relations, Action_Mapping, Actions, Fluents, check_proof=True, model_str=model_str,
                          multi_entry=multi_entry)
     # reset
     scalar_mask.clear()

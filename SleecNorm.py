@@ -1154,6 +1154,7 @@ def check_situational_conflict(model_str, multi_entry=False):
     output = ""
     result = False
     adj_hl = []
+    conflicting_set_for_fluents = set()
     multi_output = []
     model, rules, Action_Mapping, Actions, og_rules, concerns, relations = parse_sleec_norm(model_str, read_file=False)
     for rule in rules:
