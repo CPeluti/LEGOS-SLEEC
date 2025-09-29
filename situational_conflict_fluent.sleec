@@ -1,0 +1,41 @@
+def_start
+
+// Controlled events
+event eCtrl_StartApproachNurse
+event eCtrl_EndApproachNurse
+event eCtrl_StartPickSample
+event eCtrl_EndPickSample
+event eCtrl_StartAuthentication
+event eCtrl_EndAuthentication
+event eCtrl_EmergencyEndAuthentication
+
+// DeliveryInfo
+measure vMon_deliveryPickupLocation: numeric
+
+// RobotInfo
+measure vCtrl_robotLocation: numeric
+
+// Other monitorable measures
+measure vMon_authorizedPersonnel: boolean
+
+// Fluents
+fluent ApproachNurse <{eCtrl_StartApproachNurse}, {eCtrl_EndApproachNurse}>
+fluent PickSample <{eCtrl_StartPickSample}, {eCtrl_EndPickSample}>
+fluent Authentication <{eCtrl_StartAuthentication}, {eCtrl_EndAuthentication, eCtrl_EmergencyEndAuthentication}>
+
+def_end 
+
+rule_start 
+
+Rule3 when eCtrl_EndApproachNurse
+          and ({vMon_deliveryPickupLocation} = {vCtrl_robotLocation})
+          then eCtrl_StartPickSample
+
+Rule7 when eCtrl_StartAuthentication
+      and (not {vMon_authorizedPersonnel})
+      then eCtrl_EmergencyEndAuthentication
+
+Rule7_1 when eCtrl_EmergencyEndAuthentication
+        then not eCtrl_StartPickSample
+      
+rule_end
