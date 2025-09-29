@@ -1309,7 +1309,8 @@ def check_situational_conflict(model_str, multi_entry=False):
         measure_inv.clear()
         derivation_rule.reset()
         clear_relational_constraints(relations)
-
+    print("*"*100+"\n")
+    print(check_fluent_conflicts(Fluents, conflicting_set_for_fluents))
     output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents)
     output += "*" * 100 + '\n'
     derivation_rule.reset()
