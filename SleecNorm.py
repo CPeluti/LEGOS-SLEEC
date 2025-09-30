@@ -1268,17 +1268,15 @@ def check_situational_conflict(model_str, multi_entry=False):
                     output += "Because of the following SLEEC rule:\n"
                     output += ("-" * 100 + '\n')
                     conflicting_set_for_fluents.add((target.name, target.response.occ.event.event.name))
+                    conflicting_set_for_fluents.add((target.name, target.trigger.event.name))
                     for r in reasons:
-                        print(r)
                         conflicting_set_for_fluents.add((r.name, r.response.occ.event.event.name))
+                        conflicting_set_for_fluents.add((r.name, r.trigger.event.name))
                         start, end = r._tx_position, r._tx_position_end
                         new_start = len(output)
                         local_index[(start, end)] = new_start
                         output += "{}\n".format(model_str[start: end])
                         output += ("-" * 100 + '\n')
-
-                    print(output)
-                    print(conflicting_set_for_fluents)
 
                     print("TO BE HIGHLIGHTED")
                     hls = get_high_light(derivation)
