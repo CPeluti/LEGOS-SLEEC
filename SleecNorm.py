@@ -1269,6 +1269,7 @@ def check_situational_conflict(model_str, multi_entry=False):
                     output += ("-" * 100 + '\n')
                     conflicting_set_for_fluents.add((target.name, target.response.occ.event.event.name))
                     for r in reasons:
+                        print(r)
                         conflicting_set_for_fluents.add((r.name, r.response.occ.event.event.name))
                         start, end = r._tx_position, r._tx_position_end
                         new_start = len(output)
@@ -1277,6 +1278,7 @@ def check_situational_conflict(model_str, multi_entry=False):
                         output += ("-" * 100 + '\n')
 
                     print(output)
+                    print(conflicting_set_for_fluents)
 
                     print("TO BE HIGHLIGHTED")
                     hls = get_high_light(derivation)
@@ -1310,7 +1312,9 @@ def check_situational_conflict(model_str, multi_entry=False):
         derivation_rule.reset()
         clear_relational_constraints(relations)
     print("*"*100+"\n")
-    print(check_fluent_conflicts(Fluents, conflicting_set_for_fluents))
+    print(Fluents)
+    print(conflicting_set_for_fluents)
+    print("teste:" + check_fluent_conflicts(Fluents, conflicting_set_for_fluents))
     output += check_fluent_conflicts(Fluents, conflicting_set_for_fluents)
     output += "*" * 100 + '\n'
     derivation_rule.reset()

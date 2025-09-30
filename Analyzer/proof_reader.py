@@ -525,6 +525,7 @@ def add_vars(derivations):
 
 def check_and_minimize(input_proof, output_proof=None):
     derivations = parse_proof(input_proof)
+    # print("DERIVATIONS: " + derivations + "\n" + "*" * 100 + "\n")
     if derivations:
         print("detect conflict, and start backward checking")
         parse_fact_formulas()
